@@ -1,0 +1,47 @@
+name: Haskell CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Haskell
+      uses: haskell/actions/setup@v1
+      with:
+        ghc-version: '9.4.8'
+
+    - name: Cache Stack
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.stack
+        key: ${{ runner.os }}-stack-${{ hashFiles('stack.yaml') }}-${{ hashFiles('stack.yaml.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-stack-
+
+    - name: Install dependencies
+      run: stack build --only-dependencies
+
+    - name: Build
+      run: stack build --test --bench --no-run-benchmarks
+
+    - name: Run tests
+      run: stack test
+
+    - name: Run static analysis
+      run: stack exec -- hlint .
+
+    - name: Type check with warnings
+      run: stack exec -- ghc -Wall -fno-code $(find . -name '*.hs')
