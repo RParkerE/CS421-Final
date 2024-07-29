@@ -32,10 +32,10 @@ jobs:
           ${{ runner.os }}-stack-
 
     - name: Install dependencies
-      run: stack build --only-dependencies
+      run: stack setup && stack build --only-dependencies
 
     - name: Build
-      run: stack build --test --bench --no-run-benchmarks
+      run: stack build
 
     - name: Run tests
       run: stack test
@@ -45,3 +45,7 @@ jobs:
 
     - name: Type check with warnings
       run: stack exec -- ghc -Wall -fno-code $(find . -name '*.hs')
+
+    - name: Format code
+      run: |
+        stack exec -- stylish-haskell -i $(find app src test -name '*.hs')
